@@ -1,51 +1,56 @@
+from pickle import NONE
 import pytest
 import brownie
-from brownie import NaiveReceiverLenderPool, FlashLoanReceiver, AttackNaiveReceiver
+from brownie import SideEntranceLenderPool, AttackSideEntrance
 from brownie import accounts , Wei , exceptions
 
-print("[Challenge] Naive receiver : \n")
+print("[Challenge] Side Entrance : \n")
 
 deployer, user, attacker = None, None, None
 
-# Pool has 1000 ETH in balance
-ETHER_IN_POOL = Wei('1000 ether') 
-
-# Receiver has 10 ETH in balance
-ETHER_IN_RECEIVER = Wei('10 ether')
+ETHER_IN_POOL = Wei('1000 ether') # Pool has 1000 ETH in balance
+Attacker_Initial_Eth_Balance = NONE
 
 @pytest.fixture(scope="module")
 def contracts():
     #-- SETUP SCENARIO - NO NEED TO CHANGE ANYTHING HERE --#
-    global deployer, attacker, someUser 
-    deployer, attacker, someUser = accounts[0] ,accounts[1] ,accounts[2]
+    global deployer, attacker, Attacker_Initial_Eth_Balance
+    deployer, attacker = accounts[0] ,accounts[1]
 
     contracts = {}
 
-    pool = NaiveReceiverLenderPool.deploy( {"from":deployer} )
-    receiver =  FlashLoanReceiver.deploy( pool.address, {"from":deployer} )
-    attackNaiveReceiver = AttackNaiveReceiver.deploy(pool.address, {"from":attacker} )
+    pool = SideEntranceLenderPool.deploy( {"from":deployer} )
+    Attacker_Initial_Eth_Balance = attacker.balance()
+    # receiver =  FlashLoanReceiver.deploy( pool.address, {"from":deployer} )
 
-    # Funding Pool and receiver contracts with initial Ether
-    deployer.transfer(to=pool, amount=ETHER_IN_POOL)
-    deployer.transfer(to=receiver, amount=ETHER_IN_RECEIVER)
-
+    # Funding Pool with initial Ether
+    pool.deposit({"from":deployer, "value": ETHER_IN_POOL })
     assert pool.balance() == ETHER_IN_POOL
-    assert receiver.balance() == ETHER_IN_RECEIVER
-    assert pool.fixedFee() == Wei('1 ether')
 
-    contracts['receiver'] = receiver
     contracts['pool'] = pool
-    contracts['attackNaiveReceiver'] = attackNaiveReceiver
 
     yield contracts
+        
 
     #---------** SUCCESS CONDITIONS **---------#
     # All ETH has been drained from the receiver
 
-    assert contracts['receiver'].balance() == Wei('0')
-    assert contracts['pool'].balance() == (ETHER_IN_POOL + ETHER_IN_RECEIVER) 
+    assert pool.balance() == '0'
+    
+    # Not checking exactly how much is the final balance of the attacker,
+    # because it'll depend on how much gas the attacker spends in the attack
+    # If there were no gas costs, it would be balance before attack + ETHER_IN_POOL
+
+    assert attacker.balance() > Attacker_Initial_Eth_Balance
     
 def test_naive_receiver_challenge(contracts):
     #--*** CODE YOUR EXPLOIT HERE ***--#
-    contracts['attackNaiveReceiver'].attackReceiver(contracts['receiver'].address, Wei('10'), 10, {'from':attacker})
+    attack_side_entrance = AttackSideEntrance.deploy(contracts["pool"].address, {"from":attacker} )
+    
+    tx = attack_side_entrance.attack(ETHER_IN_POOL, {"from":attacker})
+    tx.wait(1)
+
+    tx = attack_side_entrance.withdraw({"from":attacker})
+    tx.wait(1)
+
     #_________________________________#
