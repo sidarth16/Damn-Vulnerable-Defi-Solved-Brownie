@@ -1,6 +1,4 @@
-from pickle import NONE
 import pytest
-import brownie
 from brownie import SideEntranceLenderPool, AttackSideEntrance
 from brownie import accounts , Wei , exceptions
 
@@ -9,7 +7,7 @@ print("[Challenge] Side Entrance : \n")
 deployer, user, attacker = None, None, None
 
 ETHER_IN_POOL = Wei('1000 ether') # Pool has 1000 ETH in balance
-Attacker_Initial_Eth_Balance = NONE
+Attacker_Initial_Eth_Balance = None
 
 @pytest.fixture(scope="module")
 def contracts():
