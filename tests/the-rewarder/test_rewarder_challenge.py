@@ -63,9 +63,34 @@ def contracts():
     yield contracts
 
     #---  [ SUCCESS CONDITIONS ]  ---#
-    # Attacker has taken all tokens from the pool
-    assert token.balanceOf(attacker.address) == TOKENS_IN_POOL
-    assert token.balanceOf(pool.address) == '0'
+    
+    # Only one round should have taken place
+    assert rewarderPool.roundNumber() == '3'
+
+     # Users should get neglegible rewards this round
+    for user in users:
+        rewarderPool.distributeRewards({"from":user})
+        rewards = rewardToken.balanceOf(user.address)
+        
+        # The difference between current and previous rewards balance should be lower than 0.01 tokens
+        delta = rewards - Wei('25')
+        assert  delta < 10**16
+        expect(delta).to.be.lt(ethers.utils.parseUnits('1', 16))
+        console.log("\n----[ delta 1 passed ]----\n")
+
+        
+        // Rewards must have been issued to the attacker account
+        expect(await this.rewardToken.totalSupply()).to.be.gt(ethers.utils.parseEther('100'));
+        console.log("\n----[ Total Rewards passed ]----\n")
+        let rewards = await this.rewardToken.balanceOf(attacker.address);
+        
+        // The amount of rewards earned should be really close to 100 tokens
+        let delta = ethers.utils.parseEther('100').sub(rewards);
+        expect(delta).to.be.lt(ethers.utils.parseUnits('1', 17));
+        console.log("\n----[ Delta 2 passed ]----\n")
+        
+        // Attacker finishes with zero DVT tokens in balance
+        expect(await this.liquidityToken.balanceOf(attacker.address)).to.eq('0');
 
 
 def test_truster_challenge(contracts):
