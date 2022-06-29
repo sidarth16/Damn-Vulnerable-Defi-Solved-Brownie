@@ -35,8 +35,7 @@ def contracts():
         liquidityToken.transfer(user.address, amount, {"from":deployer})
         liquidityToken.approve(rewarderPool.address, amount, {"from":user})
         rewarderPool.deposit(amount, {"from":user})
-        assert accountingToken.balanceOf(users[i].address) == amount
-    
+        assert accountingToken.balanceOf(user.address) == amount
     assert accountingToken.totalSupply() == Wei('400 ether')
     assert rewardToken.totalSupply() == '0'
 
@@ -44,35 +43,22 @@ def contracts():
     chain.mine(1)
           
     # Each depositor gets 25 reward tokens
-    for user in range users:
-        await this.rewarderPool.connect(users[i]).distributeRewards();
-        expect(
-            await this.rewardToken.balanceOf(users[i].address)
-        ).to.be.eq(ethers.utils.parseEther('25'));
-    }
-    expect(await this.rewardToken.totalSupply()).to.be.eq(ethers.utils.parseEther('100'));
+    for user in users:
+        rewarderPool.distributeRewards({"from":user})
+        assert rewardToken.balanceOf(user.address) == Wei('25 ether')
+    assert rewardToken.totalSupply() == Wei('100 ether')
 
-        // Attacker starts with zero DVT tokens in balance
-        expect(await this.liquidityToken.balanceOf(attacker.address)).to.eq('0');
-        
-        // Two rounds should have occurred so far
-        expect(
-            await this.rewarderPool.roundNumber()
-        ).to.be.eq('2');
+    # Attacker starts with zero DVT tokens in balance
+    assert liquidityToken.balanceOf(attacker.address) == '0'
+    
+    # Two rounds should have occurred so far
+    assert rewarderPool.roundNumber() == '2'
 
-
-
-
-    token = DamnValuableToken.deploy( {"from":deployer})
-    pool = TrusterLenderPool.deploy(token.address,  {"from":deployer})
-
-    token.transfer(pool.address, TOKENS_IN_POOL)
-
-    assert token.balanceOf(pool.address) == TOKENS_IN_POOL
-    assert token.balanceOf(attacker.address) == 0
-
-    contracts['token'] = token
-    contracts['pool'] = pool
+    contracts['liquidityToken'] = liquidityToken
+    contracts["flashLoanPool"] = flashLoanPool
+    contracts["rewarderPool"] = rewarderPool
+    contracts['rewardToken'] = rewardToken
+    contracts['AccountingToken'] = accountingToken
 
     yield contracts
 
@@ -84,25 +70,4 @@ def contracts():
 
 def test_truster_challenge(contracts):
     #-- [ CODE YOUR EXPLOIT HERE ] ---#
-    
-    attackTruster = AttackTruster.deploy(
-        contracts["pool"].address,
-        contracts["token"].address,
-        {"from":attacker}
-    )
-
-    tx = attackTruster.attack(
-            '0',
-            attacker.address,
-            TOKENS_IN_POOL,
-            {"from":attacker}
-        )
-    tx.wait(1)
-
-    contracts["token"].transferFrom(
-        contracts["pool"].address, 
-        attacker.address, 
-        TOKENS_IN_POOL,
-        {"from":attacker}
-    )
     #_________________________________#
