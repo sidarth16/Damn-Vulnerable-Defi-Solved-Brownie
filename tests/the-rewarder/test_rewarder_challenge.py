@@ -16,6 +16,7 @@ def contracts():
 
     global deployer, alice, bob, charlie, david, attacker, users
     deployer, alice, bob, charlie, david, attacker = accounts[0:6]
+    users = [alice, bob, charlie, david]
 
     contracts = {}
 
@@ -26,8 +27,8 @@ def contracts():
     liquidityToken.transfer(flashLoanPool.address, TOKENS_IN_LENDER_POOL, {"from":deployer})
 
     rewarderPool =  TheRewarderPool.deploy(liquidityToken.address, {"from":deployer})
-    rewardToken =  RewardToken.attach(rewarderPool.rewardToken(), {"from":deployer})
-    accountingToken =  AccountingToken.attach(rewarderPool.accToken(), {"from":deployer})
+    rewardToken =  RewardToken.at(rewarderPool.rewardToken())
+    accountingToken =  AccountingToken.at(rewarderPool.accToken())
 
     # Alice, Bob, Charlie and David deposit 100 tokens each
     for user in users: 
@@ -72,27 +73,23 @@ def contracts():
         rewarderPool.distributeRewards({"from":user})
         rewards = rewardToken.balanceOf(user.address)
         
-        # The difference between current and previous rewards balance should be lower than 0.01 tokens
-        delta = rewards - Wei('25')
-        assert  delta < 10**16
-        expect(delta).to.be.lt(ethers.utils.parseUnits('1', 16))
-        console.log("\n----[ delta 1 passed ]----\n")
-
+    # The difference between current and previous rewards balance should be lower than 0.01 tokens
+    delta = rewards - Wei('25 ether')
+    assert  delta < Wei(1e16)
         
-        // Rewards must have been issued to the attacker account
-        expect(await this.rewardToken.totalSupply()).to.be.gt(ethers.utils.parseEther('100'));
-        console.log("\n----[ Total Rewards passed ]----\n")
-        let rewards = await this.rewardToken.balanceOf(attacker.address);
+    # Rewards must have been issued to the attacker account
+    assert rewardToken.totalSupply() > Wei('100 ether')
+    rewards = rewardToken.balanceOf(attacker.address)
         
-        // The amount of rewards earned should be really close to 100 tokens
-        let delta = ethers.utils.parseEther('100').sub(rewards);
-        expect(delta).to.be.lt(ethers.utils.parseUnits('1', 17));
-        console.log("\n----[ Delta 2 passed ]----\n")
-        
-        // Attacker finishes with zero DVT tokens in balance
-        expect(await this.liquidityToken.balanceOf(attacker.address)).to.eq('0');
+    # The amount of rewards earned should be really close to 100 tokens
+    delta = Wei('100 ether').sub(rewards)
+    assert delta < Wei(1e17)
+    
+    # Attacker finishes with zero DVT tokens in balance
+    assert liquidityToken.balanceOf(attacker.address) == ('0')
 
 
-def test_truster_challenge(contracts):
+def test_rewarder_challenge(contracts):
     #-- [ CODE YOUR EXPLOIT HERE ] ---#
+    pass
     #_________________________________#
