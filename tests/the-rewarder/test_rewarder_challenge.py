@@ -82,7 +82,7 @@ def contracts():
     rewards = rewardToken.balanceOf(attacker.address)
         
     # The amount of rewards earned should be really close to 100 tokens
-    delta = Wei('100 ether').sub(rewards)
+    delta = Wei('100 ether') - (rewards)
     assert delta < Wei(1e17)
     
     # Attacker finishes with zero DVT tokens in balance
@@ -91,12 +91,16 @@ def contracts():
 
 def test_rewarder_challenge(contracts):
     #-- [ CODE YOUR EXPLOIT HERE ] ---#
-    AttackRewarder = AttackRewarder.deploy(
+    attackRewarder = AttackRewarder.deploy(
             contracts['rewarderPool'].address,
             contracts['flashLoanPool'].address,
             contracts['liquidityToken'].address,
             {"from":attacker}
     )
 
-    pass
+    # Advance time 5 days so that depositors can get rewards
+    chain.sleep(5 * 24 * 60 * 60)
+    chain.mine(1)
+
+    attackRewarder.attack(TOKENS_IN_LENDER_POOL, attacker.address, {"from":attacker})
     #_________________________________#
