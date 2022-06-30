@@ -91,5 +91,12 @@ def contracts():
 
 def test_rewarder_challenge(contracts):
     #-- [ CODE YOUR EXPLOIT HERE ] ---#
+    AttackRewarder = AttackRewarder.deploy(
+            contracts['rewarderPool'].address,
+            contracts['flashLoanPool'].address,
+            contracts['liquidityToken'].address,
+            {"from":attacker}
+    )
+
     pass
     #_________________________________#
