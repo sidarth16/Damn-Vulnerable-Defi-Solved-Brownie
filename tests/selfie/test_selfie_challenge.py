@@ -23,45 +23,16 @@ def contracts():
     governance =  SimpleGovernance.deploy(token.address, {"from":deployer})
     pool = SelfiePool.deploy(token.address, governance.address, {"from":deployer})
 
-#     # Set initial token balance of the pool offering flash loans
-#     liquidityToken.transfer(flashLoanPool.address, TOKENS_IN_LENDER_POOL, {"from":deployer})
+    # Set initial token balance of the pool offering flash loans
+    token.transfer(pool.address, TOKENS_IN_POOL, {"from":deployer})
 
-#     rewarderPool =  TheRewarderPool.deploy(liquidityToken.address, {"from":deployer})
-#     rewardToken =  RewardToken.at(rewarderPool.rewardToken())
-#     accountingToken =  AccountingToken.at(rewarderPool.accToken())
+    assert token.balanceOf(pool.address) == TOKENS_IN_POOL
 
-#     # Alice, Bob, Charlie and David deposit 100 tokens each
-#     for user in users: 
-#         amount = Wei('100 ether')
-#         liquidityToken.transfer(user.address, amount, {"from":deployer})
-#         liquidityToken.approve(rewarderPool.address, amount, {"from":user})
-#         rewarderPool.deposit(amount, {"from":user})
-#         assert accountingToken.balanceOf(user.address) == amount
-#     assert accountingToken.totalSupply() == Wei('400 ether')
-#     assert rewardToken.totalSupply() == '0'
+    contracts['token'] = tokens
+    contracts["governance"] = governance
+    contracts["pool"] = pool
 
-#     chain.sleep(5 * 24 * 60 * 60)
-#     chain.mine(1)
-          
-#     # Each depositor gets 25 reward tokens
-#     for user in users:
-#         rewarderPool.distributeRewards({"from":user})
-#         assert rewardToken.balanceOf(user.address) == Wei('25 ether')
-#     assert rewardToken.totalSupply() == Wei('100 ether')
-
-#     # Attacker starts with zero DVT tokens in balance
-#     assert liquidityToken.balanceOf(attacker.address) == '0'
-    
-#     # Two rounds should have occurred so far
-#     assert rewarderPool.roundNumber() == '2'
-
-#     contracts['liquidityToken'] = liquidityToken
-#     contracts["flashLoanPool"] = flashLoanPool
-#     contracts["rewarderPool"] = rewarderPool
-#     contracts['rewardToken'] = rewardToken
-#     contracts['AccountingToken'] = accountingToken
-
-#     yield contracts
+    yield contracts
 
 #     #---  [ SUCCESS CONDITIONS ]  ---#
     
