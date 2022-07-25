@@ -15,9 +15,9 @@ compiler:
       - '@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.6.0'
 
 networks:
-  default: hardhat
+  default: development
   development:
     cmd_settings:
       mnemonic: 'Brownie'
       accounts: 100
-      default_balance: 1000
+      default_balance: 12000
