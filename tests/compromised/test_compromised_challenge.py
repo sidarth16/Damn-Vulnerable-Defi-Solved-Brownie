@@ -54,7 +54,19 @@ def contracts():
 
     yield contracts
 
-    E
+    # **--SUCCESS CONDITIONS--**
+        
+    # Exchange must have lost all ETH
+    assert exchange.balance() == '0'
+        
+    # Attacker's ETH balance must have significantly increased
+    assert attacker.balance() > EXCHANGE_INITIAL_ETH_BALANCE
+    
+    # Attacker must not own any NFT
+    assert nftToken.balanceOf(attacker.address) == '0'
+
+    # NFT price shouldn't have changed
+    assert oracle.getMedianPrice("DVNFT") == INITIAL_NFT_PRICE
 
 def test_compromised_challenge(contracts):
     #--*** CODE YOUR EXPLOIT HERE ***--#
