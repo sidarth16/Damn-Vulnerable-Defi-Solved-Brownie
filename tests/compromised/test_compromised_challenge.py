@@ -70,6 +70,14 @@ def contracts():
 
 def test_compromised_challenge(contracts):
     #--*** CODE YOUR EXPLOIT HERE ***--#
+    
+    # Decode the source private key and load trusted source wallets
+    privateKey1 = "0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9";
+    source1 = accounts.add(privateKey1)
+
+    privateKey2 = "0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48";
+    source2 = accounts.add(privateKey2)
+
+    
     #_________________________________#
-    pass
 
